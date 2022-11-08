@@ -53,10 +53,10 @@ namespace Minesweeper
                 delete board;
                 board = nullptr;
             }
-            board = new _cell<_T> *[this->rows];
+            board = new _cell* [this->rows];
             for (int i = 0; i < this->cols; i++)
             {
-                board[i] = new _cell<_T>[this->cols];
+                board[i] = new _cell[this->cols];
             }
         }
 
@@ -85,19 +85,20 @@ namespace Minesweeper
             {
                 for (uint16_t j = 0; j < this->cols; j++)
                 {
-                    this->board[i][j].
+                    // this->board[i][j].
                 }
             }
         }
 
     public:
         /* parameters rows and cols are subject to constraint */
-        MineBoard(uint16_t rows, uint16_t cols)
+        MineBoard(uint16_t rows, uint16_t cols, uint16_t mines)
         {
             if (MIN_ROW <= rows && rows <= MAX_ROW && MIN_COL <= cols && cols <= MAX_COL)
             {
                 this->rows = rows;
                 this->cols = cols;
+                this->mines = mines;
                 random_init();
             }
             else

@@ -1,10 +1,9 @@
 #include "MineBoard.h"
-#include <random>
 
 
 int main()
 {
-    Minesweeper::MineBoard<char> board(4, 4);
+    Minesweeper::MineBoard<char> board(4, 4, 5);
 
     std::cout << "Rows: " << board.Rows() << "\n" << "Cols: " << board.Cols() << "\n";
 
