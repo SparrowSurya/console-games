@@ -58,6 +58,7 @@ void print_cnt(udtype_t);
 int main()
 {
     srand(time(0));
+
     return 0;
 }
 
@@ -80,11 +81,13 @@ bool resize(udtype_t rows, udtype_t cols)
 }
 
 void print() {
+    std::cout << '\n';
     print_sep();
     for (udtype_t i = 0; i < Rows; i++) {
         print_cnt(i);
         print_sep();
-    }    
+    }
+    std::cout << '\n';
 }
 
 /* 0 to end including end */
@@ -92,6 +95,46 @@ udtype_t random(udtype_t end) {
     return rand() % (end+1);
 }
 
-coord_t *neighbour8(udtype_t row, udtype_t col) {
-    
+coord_t *neighbour8(udtype_t r, udtype_t c) {
+    coord_t *neighbour = new coord_t[8];
+    udtype_t i = 0;
+    sdtype_t rel_dir[8][2] = {
+        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+    };
+
+    for (auto d: rel_dir) {
+        if (MINROW <= r+d[0] &&r+d[0]<=MAXROW && MINCOL <= c+d[1] &&c+d[1]<=MAXCOL) {
+            neighbour[i].r = r+d[0];
+            neighbour[i].c = c+d[1];
+        }
+    }
+    return neighbour;
+}
+
+void print_cnt(udtype_t r) {
+    std::cout << '|';
+    for (udtype_t c=0; c<Cols; c++) {
+        if (Mineboard[r][c].state == HIDDEN) {
+            std::cout << (char)176 << (char)176 << (char)176 << '|'; 
+        } else if (Mineboard[r][c].state == OPENED) {
+            if (Mineboard[r][c].mines == 0) {
+                std::cout << "   ";
+            } else {
+                std::cout << ' ' << Mineboard[r][c].mines << ' ' << '|';
+            }
+        } else if (Mineboard[r][c].state == FLAGGED) {
+            std::cout << ' ' << (char)254 << ' ' << '|';
+        } else {
+            throw "Unexpected cause for board cell has undefined state";
+        }
+    }
+    std::cout << '\n';
+}
+
+void print_sep() {
+    std::cout << '+';
+    for (udtype_t i=0; i<Cols; i++) {
+        std::cout << "---+";
+    }
+    std::cout << '\n';
 }
