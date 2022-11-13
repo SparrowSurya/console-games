@@ -40,7 +40,7 @@ dtype_t Mines = 0;
 
 void generate();                          /* generates mineboard mines */
 void reset();                             /* erases all data to default in mineboard */
-void modify_mines(cell_t *, short);       /* changes mines amount in given cells */
+void modify_mines(cell_t **, short);       /* changes mines amount in given cells */
 bool resize(dtype_t, dtype_t);            /* resizes the mineboard */
 void first_guess_wrong(dtype_t, dtype_t); /* prevents the first selected cell to be mine */
 dtype_t random(dtype_t);                  /* returns random number including end */
@@ -49,12 +49,22 @@ void print();                             /* outputs mineboard to console */
 void print_sep();                         /* sub-function of print function to print single seperating row */
 void print_cnt(dtype_t);                  /* sub-function of print to print single row elemnts of mineboard based on their data */
 
+
 int main() // MAIN
 {
     srand(time(0)); // random seed for each program instance
 
+    resize(5, 5);
+    print();
+
+    generate();
+    print();
+
+
+    std::cout << '\n' << "SUCESSFUL EXIT" << '\n';
     return 0;
 }
+
 
 /* to generate mineboard */
 void generate()
@@ -69,7 +79,7 @@ void generate()
         if (Mineboard[r][c].is_mine == false)
         {
             Mineboard[r][c].is_mine = true;
-            modify_mines(r, c, neighbour8(r, c), +1);
+            modify_mines(neighbour8(r, c), 1);
             m--;
         }
     }
@@ -78,14 +88,11 @@ void generate()
 /* changes mines amount in given cells */
 void modify_mines(cell_t **cells, short amount)
 {
-    for (auto cell : cells)
-    {
-        if (cell == nullptr)
-        {
-            break;
-        }
-        cell.mines += amount;
-    }
+   int i = 0;
+   while(cells[i] != NULL){
+      cells[i] -> mines += amount;
+      ++i;
+   }
 }
 
 /* resizes the mineboard */
@@ -156,14 +163,14 @@ dtype_t random(dtype_t end)
 }
 
 /* returns the eight neighbour cells */
-cell_t **neighbour8(dtype_t r, dtype_t c)
+cell_t **neighbour8(dtype_t r, dtype_t c) 
 {
     cell_t **neighbour = new cell_t *[8]();
     dtype_t i = 0;
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}};
 
-    for (auto d : rel_dir)
+    for (auto &d : rel_dir)
     {
         if (MINROW <= r + d[0] && r + d[0] <= MAXROW && MINCOL <= c + d[1] && c + d[1] <= MAXCOL)
         {
