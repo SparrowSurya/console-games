@@ -76,7 +76,7 @@ void generate()
 }
 
 /* changes mines amount in given cells */
-void modify_mines(cell_t *cells, short amount)
+void modify_mines(cell_t **cells, short amount)
 {
     for (auto cell : cells)
     {
@@ -108,6 +108,18 @@ bool resize(dtype_t rows, dtype_t cols)
         Mineboard[i] = new cell_t[Cols];
     }
     return true;
+}
+
+/* prevents the first selected cell to be mine */
+void first_guess_wrong(dtype_t r, dtype_t c)
+{
+    modify_mines(neighbour8(r, c), -1);
+    do
+    {
+        r = random(Rows - 1);
+        c = random(Cols - 1);
+    } while (Mineboard[r][c].is_mine == true);
+    modify_mines(neighbour8(r, c), +1);
 }
 
 /* erases all data to default in mineboard */
