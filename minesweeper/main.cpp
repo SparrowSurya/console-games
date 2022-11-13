@@ -40,7 +40,7 @@ dtype_t Mines = 0;
 
 void generate();                          /* generates mineboard mines */
 void reset();                             /* erases all data to default in mineboard */
-void increment_mines(dtype_t, dtype_t);   /* increments mines count in neighbours */
+void modify_mines(cell_t *, short);       /* changes mines amount in given cells */
 bool resize(dtype_t, dtype_t);            /* resizes the mineboard */
 void first_guess_wrong(dtype_t, dtype_t); /* prevents the first selected cell to be mine */
 dtype_t random(dtype_t);                  /* returns random number including end */
@@ -69,23 +69,22 @@ void generate()
         if (Mineboard[r][c].is_mine == false)
         {
             Mineboard[r][c].is_mine = true;
-            increment_mines(r, c);
+            modify_mines(r, c, neighbour8(r, c), +1);
             m--;
         }
     }
 }
 
-/* increments mines count in neighbours */
-void increment_mines(dtype_t r, dtype_t c)
+/* changes mines amount in given cells */
+void modify_mines(cell_t *cells, short amount)
 {
-    cell_t **neighbour = neighbour8(r, c);
-    for (auto n : neighbour)
+    for (auto cell : cells)
     {
-        if (n == nullptr)
+        if (cell == nullptr)
         {
             break;
         }
-        n.mines++;
+        cell.mines += amount;
     }
 }
 
@@ -144,7 +143,7 @@ dtype_t random(dtype_t end)
     return rand() % (end + 1);
 }
 
-/* returns the neighbour cell coordinates */
+/* returns the eight neighbour cells */
 cell_t **neighbour8(dtype_t r, dtype_t c)
 {
     cell_t **neighbour = new cell_t *[8]();
