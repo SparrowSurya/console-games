@@ -61,7 +61,7 @@ void print_cnt(udtype_t);                   /* sub-function of print to print si
 
 int main()
 {
-    srand(time(0));
+    srand(time(0)); // function for driving random seed for a program
 
     return 0;
 }
@@ -71,7 +71,7 @@ void generate()
 {
     udtype_t m = Mines, r, c;
 
-    while (m)
+    while (m) // placing mines
     {
         r = random(Rows - 1);
         c = random(Cols - 1);
@@ -84,6 +84,21 @@ void generate()
         }
     }
 }
+
+/* increments mines count in neighbours */
+void increment_mines(udtype_t r, udtype_t c)
+{
+    coord_t *neighbour = neighbour8(r, c);
+    for (auto n : neighbour)
+    {
+        if (n.r == None && n.c == None)
+        {
+            break;
+        }
+        Mineboard[n.r][n.c].mines += 1;
+    }
+}
+
 /* resizes the mineboard */
 bool resize(udtype_t rows, udtype_t cols)
 {
@@ -104,6 +119,22 @@ bool resize(udtype_t rows, udtype_t cols)
         Mineboard[i] = new cell_t[Cols];
     }
     return true;
+}
+
+/* erases all data to default in mineboard */
+void reset()
+{
+    for (udtype_t r = 0; r < Rows; r++)
+    {
+        for (udtype_t c = 0; c < Cols; c++)
+        {
+            Mineboard[r][c].is_mine = false;
+            Mineboard[r][c].mines = 0;
+            Mineboard[r][c].state = HIDDEN;
+        }
+        
+    }
+    
 }
 
 /* outputs mineboard to console */
