@@ -195,7 +195,9 @@ bool expand(num_t r, num_t c) {
 }
 
 void newgame() {
-
+    reset();
+    generate();
+    std::cout << "\n----------NEW-GAME----------\n";
 }
 
 bool resize(num_t rows, num_t cols, num_t mines) {
@@ -271,6 +273,8 @@ int Minesweeper() {
             case (cmd::RESIZE): {
                 std::cin >> row_in >> col_in >> mines_in;
                 resize(row_in, col_in, mines_in);
+                std::cout << "\n----------BOARD-RESIZED----------\n";
+                newgame();
             } break;
 
             case (cmd::CMDS): {
@@ -282,7 +286,7 @@ int Minesweeper() {
             } break;
 
             default: {
-                std::cout << "Invalid Command! \n\n";
+                std::cout << "Invalid Command! \n";
             }
         }
     }
