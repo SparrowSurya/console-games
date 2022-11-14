@@ -111,27 +111,6 @@ void reset() {
     }
 }
 
-/* resizes the mineboard */
-bool resize(num_t rows, num_t cols, num_t mines) {
-    if (MINROW > rows && rows > MAXROW && MINCOL > cols && cols > MAXCOL) {
-        return false;
-    }
-    if (Mineboard != nullptr) {
-        delete[] Mineboard;
-        Mineboard = nullptr;
-    }
-
-    Rows = rows;
-    Cols = cols;
-    Mines = mines;
-    Mineboard = new tile_t *[Rows];
-
-    for (num_t i = 0; i < Cols; i++) {
-        Mineboard[i] = new tile_t[Cols];
-    }
-    return true;
-}
-
 /* changes mines amount in adjacent tiles */
 void modify_adjacent(num_t r, num_t c, short amount) {
     short rel_dir[8][2] = {
@@ -171,7 +150,22 @@ void first_guess_wrong(num_t r, num_t c) {
     modify_adjacent(r, c, +1);
 }
 
-/* to unhide a tile */
+void info() {
+    std::cout << std::endl;
+    std::cout << "Commands: \n\n" <<
+    "Q - to quit the program  \n" <<
+    "C - displays all the commands  \n" <<
+    "N - starts new game  \n" <<
+    "S - show status of game  \n" <<
+    "X rows cols - breks the tilw at row col  \n" <<
+    "F rows cols - flags the tilw at row col  \n" <<
+    "U rows cols - removes flag on tile at row col  \n" <<
+    "E rows cols - work on tiles whose all neighbour mines are detected (works recursively)  \n" <<
+    "R rows cols mines - resizes the board (use 0 for param to use previous settings)  \n" <<
+    std::endl;
+}
+
+/* to break a tile */
 bool press(num_t r, num_t c) {
     if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == CLOSED) {
         Mineboard[r][c].state = OPENED;
@@ -180,31 +174,119 @@ bool press(num_t r, num_t c) {
     return false;
 }
 
+bool flag(num_t r, num_t c) {
+    if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == CLOSED) {
+        Mineboard[r][c].state = FLAGGED;
+        return true;
+    }
+    return false;
+}
+
+bool unflag(num_t r, num_t c) {
+    if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == FLAGGED) {
+        Mineboard[r][c].state = CLOSED;
+        return true;
+    }
+    return false;
+}
+
+bool expand(num_t r, num_t c) {
+    return false;
+}
+
+void newgame() {
+
+}
+
+bool resize(num_t rows, num_t cols, num_t mines) {
+    if (MINROW > rows && rows > MAXROW && MINCOL > cols && cols > MAXCOL) {
+        return false;
+    }
+    if (Mineboard != nullptr) {
+        delete[] Mineboard;
+        Mineboard = nullptr;
+    }
+
+    Rows = rows;
+    Cols = cols;
+    Mines = mines;
+    Mineboard = new tile_t *[Rows];
+
+    for (num_t i = 0; i < Cols; i++) {
+        Mineboard[i] = new tile_t[Cols];
+    }
+    return true;
+}
+
+bool endgame() {
+    return false;
+}
+
 int Minesweeper() {
+
+    std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
 
     // initializations
     srand(time(0)); // random seed for each program instance
-    num_t row_in, col_in, mines_in; // row & col & mine count inputs
-    short mines_left; // mines left in board; flagged tiles are counted as correct
+    char cmd_in; //
+    num_t row_in, col_in, mines_in;
 
-    resize(5, 5, 8);
+    std::cout << "Enter the size of row column and no of mines to place: \n>>> ";
+    std::cin >> row_in >> col_in >> mines_in;
+
+    resize(row_in, col_in, mines_in);
     generate();
 
     // game starts
-    std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
-
-    // testing
-
     while (1) {
-
         print();
-        std::cout << "Enter row col to break Tile: \n" << ">>> ";
-        std::cin >> row_in >> col_in;
-        press(row_in, col_in);
-    }
+        std::cout << ">>> ";
+        std::cin >> cmd_in;
 
-    std::cout << "\nSUCESSFUL EXIT\n";
-    return 0;
+        switch (cmd_in) {
+            case (cmd::POP): {
+                std::cin >> row_in >> col_in;
+                press(row_in, col_in);
+            } break;
+
+            case (cmd::FLAG): {
+                std::cin >> row_in >> col_in;
+                flag(row_in, col_in);
+            } break;
+
+            case (cmd::UNFLAG): {
+                std::cin >> row_in >> col_in;
+                unflag(row_in, col_in);
+            } break;
+
+            case (cmd::EXPAND): {
+                std::cin >> row_in >> col_in;
+                expand(row_in, col_in);
+            } break;
+
+            case (cmd::NEW): {
+                newgame();
+            } break;
+
+            case (cmd::RESIZE): {
+                std::cin >> row_in >> col_in >> mines_in;
+                resize(row_in, col_in, mines_in);
+            } break;
+
+            case (cmd::CMDS): {
+                info();
+            } break;
+
+            case (cmd::QUIT): {
+                return 0;
+            } break;
+
+            default: {
+                std::cout << "Invalid Command! \n\n";
+            }
+        }
+    }
+    return 1;
 }
 
 int main() {
