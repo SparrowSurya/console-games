@@ -14,16 +14,14 @@
 typedef unsigned short num_t;
 
 /* tile states */
-typedef enum
-{
+typedef enum {
     CLOSED,
     OPENED,
     FLAGGED
 } state_t;
 
 /* tile structure */
-typedef struct
-{
+typedef struct {
     state_t state = CLOSED;
     bool is_mine = false;
     num_t mines = 0;
@@ -35,6 +33,19 @@ tile_t **Mineboard = nullptr;
 num_t Rows = 0;
 num_t Cols = 0;
 num_t Mines = 0;
+
+/* various commands */
+typedef enum {
+    QUIT    = 'Q', /* to quit the game */
+    CMDS    = 'C', /* to get list of all commands with their uses */
+    STATUS  = 'I', /* to know the status of game */
+    POP     = 'X', /* to hit a tile */
+    FLAG    = 'F', /* to flag athe tile */
+    UNFLAG  = 'U', /* to unflag a tile */
+    EXPAND  = 'E', /* to expand recursively on cells who have mines around them detected */
+    NEW     = 'N', /* to start new match*/
+    RESIZE  = 'R'  /* to resize the mineboard dimensions */
+} cmd;
 
 
 /* sub-function of print to print single row elemnts of mineboard based on their data */
@@ -56,7 +67,7 @@ void print_cnt(num_t r) {
             }
         }
         else if (Mineboard[r][c].state == FLAGGED) {
-            std::cout << ' ' << (char)254 << ' ' << '|';
+            std::cout << ' ' << (char)35 << ' ' << '|';
         } else {
             throw "Unexpected cause for board tile has undefined state";
         }
@@ -169,7 +180,7 @@ bool press(num_t r, num_t c) {
     return false;
 }
 
-int main() {
+int Minesweeper() {
 
     // initializations
     srand(time(0)); // random seed for each program instance
@@ -194,4 +205,8 @@ int main() {
 
     std::cout << "\nSUCESSFUL EXIT\n";
     return 0;
+}
+
+int main() {
+    return Minesweeper();
 }
