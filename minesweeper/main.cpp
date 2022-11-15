@@ -111,16 +111,28 @@ void reset() {
     }
 }
 
-/* changes mines amount in adjacent tiles */
-void modify_adjacent(num_t r, num_t c, short amount) {
+tile_t* get_adjacent_tiles(num_t r, num_t c, tile_t adjacent_tiles[8]) {
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
-
+    num_t index = 0;
+    
     for (auto &d : rel_dir) {
         if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            Mineboard[r + d[0]][c + d[1]].mines += amount;
+            adjacent_tiles[index] = Mineboard[r + d[0]][c + d[1]];
+            index++;
         }
+    }
+    return adjacent_tiles;
+}
+
+/* changes mines amount in adjacent tiles */
+void modify_adjacent_mines(num_t r, num_t c, short amount) {
+    tile_t *adjacent_tiles = new tile_t[8]();
+    adjacent_tiles = get_adjacent_tiles(r, c, adjacent_tiles);
+
+    for (num_t i=0; i<8; i++) {
+        adjacent_tiles[i].mines += amount;
     }
 }
 
@@ -134,20 +146,25 @@ void generate() {
 
         if (Mineboard[r][c].is_mine == false) {
             Mineboard[r][c].is_mine = true;
-            modify_adjacent(r, c, 1);
+            modify_adjacent_mines(r, c, 1);
             m--;
         }
     }
 }
 
+/* condition check for recursive expansion */
+bool is_expansion_possible(num_t r, num_t c) {
+
+}
+
 /* prevents the first selected tile to be mine */
 void first_guess_wrong(num_t r, num_t c) {
-    modify_adjacent(r, c, -1);
+    modify_adjacent_mines(r, c, -1);
     do {
         r = random(Rows);
         c = random(Cols);
     } while (Mineboard[r][c].is_mine == true);
-    modify_adjacent(r, c, +1);
+    modify_adjacent_mines(r, c, +1);
 }
 
 void info() {
@@ -191,6 +208,9 @@ bool unflag(num_t r, num_t c) {
 }
 
 bool expand(num_t r, num_t c) {
+    if (is_expansion_possible(r, c)) {
+
+    }
     return false;
 }
 
