@@ -158,8 +158,9 @@ void modify_adjacent_mines(num_t r, num_t c, short amount) {
     tile_t** adj_tiles;
     get_adj_tiles(r, c, adj_tiles);
 
+
     for (num_t i=0; i<8; i++) {
-        if ((*adj_tiles)[i] == nullptr) {
+        if (adj_tiles[i] == nullptr) {
             break;
         } else {
             (*adj_tiles[i]).mines += amount;
@@ -267,7 +268,6 @@ void expand(num_t r, num_t c) {
             }
         }
     }
-    delete[] neighbours;
 }
 
 void newgame() {
@@ -307,7 +307,8 @@ int Minesweeper() {
     // initializations
     srand(time(0)); // random seed for each program instance
     std::string cmd;
-    char cmd_in; 
+    char cmd_in;
+    int index; 
     num_t row_in, col_in, mines_in;
 
     std::cout << "Enter the size of row column and no of mines to place: \n>>> ";
@@ -323,7 +324,9 @@ int Minesweeper() {
         std::cin >> cmd_in;
 
         // parser
-        
+        for (index=0; index<cmd.length(); index++) {
+            
+        }
 
         switch (cmd_in) {
             case (cmd::POP): {
