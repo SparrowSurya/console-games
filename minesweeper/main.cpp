@@ -1,16 +1,13 @@
 #include <iostream>
 #include <time.h>
 #include <cstdlib>
-#include <limits.h>
 
 /* settings */
 
 #define MAXROW 8
-#define MINROW 2
 #define MAXCOL 12
+#define MINROW 2
 #define MINCOL 2
-#define NULL_COORD USHRT_MAX
-#define NULL_MINE  10
 
 /* unsigned datatype */
 typedef unsigned short num_t;
@@ -119,8 +116,8 @@ void reset() {
     }
 }
 
-/* returns adjacent tiles */
-tile_t* get_adj_tiles(num_t r, num_t c, tile_t adj_tiles[8]) {
+/* fills adjacent tiles in given parameter */
+void get_adj_tiles(num_t r, num_t c, tile_t** adj_tiles) {
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
@@ -128,41 +125,45 @@ tile_t* get_adj_tiles(num_t r, num_t c, tile_t adj_tiles[8]) {
     
     for (auto &d : rel_dir) {
         if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            adj_tiles[index] = Mineboard[r + d[0]][c + d[1]];
-            index++;
-        }
-    }
-    return adj_tiles;
-}
-
-/* returns adjacent tiles coord */
-coord_t* get_adj_tiles(num_t r, num_t c, coord_t adj_tiles[8]) {
-    short rel_dir[8][2] = {
-        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
-    };
-    num_t index = 0;
-    
-    for (auto &d : rel_dir) {
-        if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            (adj_tiles[index]).r = r + d[0];
-            (adj_tiles[index]).c = c + d[1];
+            adj_tiles[index] = &(Mineboard[r + d[0]][c + d[1]]);
             index++;
         }
     }
     if (index<7) {
-        adj_tiles[index].r = 10;
-        adj_tiles[index].c = 99;
+        adj_tiles[index] = nullptr;
     }
-    return adj_tiles;
+}
+
+/* fills adjacent tiles coord in given parameter */
+void get_adj_tiles(num_t r, num_t c, coord_t** adj_tiles) {
+    short rel_dir[8][2] = {
+        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+    };
+    num_t index = 0;
+    
+    for (auto &d : rel_dir) {
+        if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
+            (*adj_tiles[index]).r = r + d[0];
+            (*adj_tiles[index]).c = c + d[1];
+            index++;
+        }
+    }
+    if (index<7) {
+        adj_tiles[index] = nullptr;
+    }
 }
 
 /* changes mines amount in adjacent tiles */
 void modify_adjacent_mines(num_t r, num_t c, short amount) {
-    tile_t *adj_tiles[8];
-    adj_tiles = get_adj_tiles(r, c, adj_tiles);
+    tile_t** adj_tiles;
+    get_adj_tiles(r, c, adj_tiles);
 
     for (num_t i=0; i<8; i++) {
-        (*adj_tiles)[i].mines += amount;
+        if ((*adj_tiles)[i] == nullptr) {
+            break;
+        } else {
+            (*adj_tiles[i]).mines += amount;
+        }
     }
 }
 
@@ -257,7 +258,7 @@ bool unflag(num_t r, num_t c) {
 
 void expand(num_t r, num_t c) {
     coord_t *neighbours[8];
-    *neighbours = get_adj_tiles(r, c, neighbours);
+    get_adj_tiles(r, c, neighbours);
     if (is_expansion_possible(r, c, neighbours)) {
         for (num_t i=0; i<8; i++) {
             if (Mineboard[r][c].state == CLOSED) {
