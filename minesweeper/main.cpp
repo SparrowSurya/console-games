@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 #include <cstdlib>
+#include <limits.h>
 
 /* settings */
 
@@ -8,7 +9,8 @@
 #define MINROW 2
 #define MAXCOL 12
 #define MINCOL 2
-#define None -1
+#define NULL_COORD USHRT_MAX
+#define NULL_MINE  10
 
 /* unsigned datatype */
 typedef unsigned short num_t;
@@ -26,6 +28,12 @@ typedef struct {
     bool is_mine = false;
     num_t mines = 0;
 } tile_t;
+
+/* coord struct having r, c info */
+typedef struct {
+    num_t r;
+    num_t c;
+}coord_t;
 
 /* global variables */
 
@@ -111,7 +119,8 @@ void reset() {
     }
 }
 
-tile_t* get_adjacent_tiles(num_t r, num_t c, tile_t adjacent_tiles[8]) {
+/* returns adjacent tiles */
+tile_t* get_adj_tiles(num_t r, num_t c, tile_t adj_tiles[8]) {
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
@@ -119,20 +128,41 @@ tile_t* get_adjacent_tiles(num_t r, num_t c, tile_t adjacent_tiles[8]) {
     
     for (auto &d : rel_dir) {
         if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            adjacent_tiles[index] = Mineboard[r + d[0]][c + d[1]];
+            adj_tiles[index] = Mineboard[r + d[0]][c + d[1]];
             index++;
         }
     }
-    return adjacent_tiles;
+    return adj_tiles;
+}
+
+/* returns adjacent tiles coord */
+coord_t* get_adj_tiles(num_t r, num_t c, coord_t adj_tiles[8]) {
+    short rel_dir[8][2] = {
+        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
+    };
+    num_t index = 0;
+    
+    for (auto &d : rel_dir) {
+        if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
+            (adj_tiles[index]).r = r + d[0];
+            (adj_tiles[index]).c = c + d[1];
+            index++;
+        }
+    }
+    if (index<7) {
+        adj_tiles[index].r = 10;
+        adj_tiles[index].c = 99;
+    }
+    return adj_tiles;
 }
 
 /* changes mines amount in adjacent tiles */
 void modify_adjacent_mines(num_t r, num_t c, short amount) {
-    tile_t *adjacent_tiles = new tile_t[8]();
-    adjacent_tiles = get_adjacent_tiles(r, c, adjacent_tiles);
+    tile_t *adj_tiles[8];
+    adj_tiles = get_adj_tiles(r, c, adj_tiles);
 
     for (num_t i=0; i<8; i++) {
-        adjacent_tiles[i].mines += amount;
+        (*adj_tiles)[i].mines += amount;
     }
 }
 
@@ -153,8 +183,25 @@ void generate() {
 }
 
 /* condition check for recursive expansion */
-bool is_expansion_possible(num_t r, num_t c) {
+bool is_expansion_possible(num_t r, num_t c, coord_t* adj_tiles[8]) {
+    num_t flags = 0;
+    if (Mineboard[r][c].state == CLOSED) {
+        for (num_t i = 0; i < 8; i++) {
+            if (adj_tiles[i] == nullptr) {
+                break;
+            }
+            if (Mineboard[(*adj_tiles)[i].r][(*adj_tiles)[i].c].state == FLAGGED) {
+                flags++;
+            }
+        }
 
+        if (flags == Mineboard[r][c].mines) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    return false;
 }
 
 /* prevents the first selected tile to be mine */
@@ -166,6 +213,7 @@ void first_guess_wrong(num_t r, num_t c) {
     } while (Mineboard[r][c].is_mine == true);
     modify_adjacent_mines(r, c, +1);
 }
+
 
 void info() {
     std::cout << std::endl;
@@ -207,11 +255,18 @@ bool unflag(num_t r, num_t c) {
     return false;
 }
 
-bool expand(num_t r, num_t c) {
-    if (is_expansion_possible(r, c)) {
-
+void expand(num_t r, num_t c) {
+    coord_t *neighbours[8];
+    *neighbours = get_adj_tiles(r, c, neighbours);
+    if (is_expansion_possible(r, c, neighbours)) {
+        for (num_t i=0; i<8; i++) {
+            if (Mineboard[r][c].state == CLOSED) {
+                Mineboard[r][c].state = OPENED;
+                expand((*neighbours)[i].r, (*neighbours)[i].c);
+            }
+        }
     }
-    return false;
+    delete[] neighbours;
 }
 
 void newgame() {
@@ -250,7 +305,8 @@ int Minesweeper() {
 
     // initializations
     srand(time(0)); // random seed for each program instance
-    char cmd_in; //
+    std::string cmd;
+    char cmd_in; 
     num_t row_in, col_in, mines_in;
 
     std::cout << "Enter the size of row column and no of mines to place: \n>>> ";
@@ -265,24 +321,27 @@ int Minesweeper() {
         std::cout << ">>> ";
         std::cin >> cmd_in;
 
+        // parser
+        
+
         switch (cmd_in) {
             case (cmd::POP): {
-                std::cin >> row_in >> col_in;
+                // std::cin >> row_in >> col_in;
                 press(row_in, col_in);
             } break;
 
             case (cmd::FLAG): {
-                std::cin >> row_in >> col_in;
+                // std::cin >> row_in >> col_in;
                 flag(row_in, col_in);
             } break;
 
             case (cmd::UNFLAG): {
-                std::cin >> row_in >> col_in;
+                // std::cin >> row_in >> col_in;
                 unflag(row_in, col_in);
             } break;
 
             case (cmd::EXPAND): {
-                std::cin >> row_in >> col_in;
+                // std::cin >> row_in >> col_in;
                 expand(row_in, col_in);
             } break;
 
@@ -291,7 +350,7 @@ int Minesweeper() {
             } break;
 
             case (cmd::RESIZE): {
-                std::cin >> row_in >> col_in >> mines_in;
+                // std::cin >> row_in >> col_in >> mines_in;
                 resize(row_in, col_in, mines_in);
                 std::cout << "\n----------BOARD-RESIZED----------\n";
                 newgame();
@@ -316,3 +375,8 @@ int Minesweeper() {
 int main() {
     return Minesweeper();
 }
+/*
+pending:
+recursive expansion
+recursive expansion on empty tiles
+*/
