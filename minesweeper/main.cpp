@@ -52,6 +52,18 @@ typedef enum {
     RESIZE  = 'R'  /* to resize the mineboard dimensions */
 } cmd;
 
+/* from character digit to number ; skips invalid digit character */
+num_t digitise(std::string __s) {
+    num_t num=0, tmp;
+    for (auto c: __s) {
+       tmp = (num_t) c;
+       if (40<=tmp && tmp<=57) {
+            num *= 10;
+            num += tmp-40;
+       }
+    }
+    return num;
+}
 
 /* sub-function of print to print single row elemnts of mineboard based on their data */
 void print_cnt(num_t r) {
@@ -302,51 +314,54 @@ bool endgame() {
 
 int Minesweeper() {
 
+    std::string cmd, token;
+    char cmd_in;
+    num_t bindex, t; 
+    void *buffer[4] {new char, new std::string, new std::string, new std::string};
+
+    srand(time(0)); // random seed for each program instance
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
 
-    // initializations
-    srand(time(0)); // random seed for each program instance
-    std::string cmd;
-    char cmd_in;
-    int index; 
-    num_t row_in, col_in, mines_in;
-
-    std::cout << "Enter the size of row column and no of mines to place: \n>>> ";
-    std::cin >> row_in >> col_in >> mines_in;
-
-    resize(row_in, col_in, mines_in);
+    resize(7, 10, 10);
     generate();
 
-    // game starts
+    /* gameloop */
     while (1) {
         print();
         std::cout << ">>> ";
-        std::cin >> cmd_in;
+        std::cin >> cmd;
 
-        // parser
-        for (index=0; index<cmd.length(); index++) {
-            
+        /* command breakdown */
+        t = 0, bindex = 0;
+        while (1) {
+            if (cmd[t] == ' ') {
+                std::cout << "Token: " << token << '\n';
+                token.clear();
+            } else if (cmd[t] == '\0') {
+                std::cout << "Token: " << token << '\n';
+                break;
+            } else {
+                token.push_back(cmd[t]);
+            }
+            t++;
         }
-
+        
+        /* actions */
         switch (cmd_in) {
             case (cmd::POP): {
-                // std::cin >> row_in >> col_in;
-                press(row_in, col_in);
+                press(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
             } break;
 
             case (cmd::FLAG): {
-                // std::cin >> row_in >> col_in;
-                flag(row_in, col_in);
+                flag(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
             } break;
 
             case (cmd::UNFLAG): {
-                // std::cin >> row_in >> col_in;
-                unflag(row_in, col_in);
+                unflag(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
             } break;
 
             case (cmd::EXPAND): {
-                // std::cin >> row_in >> col_in;
-                expand(row_in, col_in);
+                expand(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
             } break;
 
             case (cmd::NEW): {
@@ -354,8 +369,7 @@ int Minesweeper() {
             } break;
 
             case (cmd::RESIZE): {
-                // std::cin >> row_in >> col_in >> mines_in;
-                resize(row_in, col_in, mines_in);
+                resize(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]), digitise(*(std::string*)buffer[3]));
                 std::cout << "\n----------BOARD-RESIZED----------\n";
                 newgame();
             } break;
@@ -367,13 +381,9 @@ int Minesweeper() {
             case (cmd::QUIT): {
                 return 0;
             } break;
-
-            default: {
-                std::cout << "Invalid Command! \n";
-            }
         }
     }
-    return 1;
+    return 0;
 }
 
 int main() {
