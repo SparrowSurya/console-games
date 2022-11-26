@@ -41,15 +41,15 @@ num_t Mines = 0;
 
 /* various commands */
 typedef enum {
-    QUIT    = 'Q', /* to quit the game */
-    CMDS    = 'C', /* to get list of all commands with their uses */
-    STATUS  = 'I', /* to know the status of game */
-    POP     = 'X', /* to hit a tile */
-    FLAG    = 'F', /* to flag athe tile */
-    UNFLAG  = 'U', /* to unflag a tile */
-    EXPAND  = 'E', /* to expand recursively on cells who have mines around them detected */
-    NEW     = 'N', /* to start new match*/
-    RESIZE  = 'R'  /* to resize the mineboard dimensions */
+    QUIT    = 'q', /* to quit the game */
+    CMDS    = 'c', /* to get list of all commands with their uses */
+    STATUS  = 'i', /* to know the status of game */
+    POP     = 'x', /* to hit a tile */
+    FLAG    = 'f', /* to flag athe tile */
+    UNFLAG  = 'u', /* to unflag a tile */
+    EXPAND  = 'e', /* to expand recursively on cells who have mines around them detected */
+    NEW     = 'n', /* to start new match*/
+    RESIZE  = 'r'  /* to resize the mineboard dimensions */
 } cmd;
 
 /* from character digit to number ; skips invalid digit character */
@@ -170,7 +170,6 @@ void modify_adjacent_mines(num_t r, num_t c, short amount) {
     tile_t** adj_tiles;
     get_adj_tiles(r, c, adj_tiles);
 
-
     for (num_t i=0; i<8; i++) {
         if (adj_tiles[i] == nullptr) {
             break;
@@ -183,7 +182,7 @@ void modify_adjacent_mines(num_t r, num_t c, short amount) {
 /* to generate mineboard */
 void generate() {
     num_t m = Mines, r, c;
-
+    std::cout << "Mines at: ";
     while (m > 0) {
         r = random(Rows - 1);
         c = random(Cols - 1);
@@ -192,8 +191,10 @@ void generate() {
             Mineboard[r][c].is_mine = true;
             modify_adjacent_mines(r, c, 1);
             m--;
+            std::cout << '('<< r << ", " << c << ") ";
         }
     }
+    std::cout << std::endl;
 }
 
 /* condition check for recursive expansion */
@@ -230,22 +231,22 @@ void first_guess_wrong(num_t r, num_t c) {
 
 
 void info() {
-    std::cout << std::endl;
-    std::cout << "Commands: \n\n" <<
-    "Q - to quit the program  \n" <<
-    "C - displays all the commands  \n" <<
-    "N - starts new game  \n" <<
-    "S - show status of game  \n" <<
-    "X rows cols - breks the tilw at row col  \n" <<
-    "F rows cols - flags the tilw at row col  \n" <<
-    "U rows cols - removes flag on tile at row col  \n" <<
-    "E rows cols - work on tiles whose all neighbour mines are detected (works recursively)  \n" <<
-    "R rows cols mines - resizes the board (use 0 for param to use previous settings)  \n" <<
+    std::cout   << std::endl;
+    std::cout   << "Commands: \n\n" <<
+    cmd::QUIT   << " - to quit the program  \n" <<
+    cmd::CMDS   << " - displays all the commands  \n" <<
+    cmd::NEW    << " - starts new game  \n" <<
+    cmd::STATUS << " - show status of game  \n" <<
+    cmd::POP    << " rows cols - breks the tilw at row col  \n" <<
+    cmd::FLAG   << " rows cols - flags the tilw at row col  \n" <<
+    cmd::UNFLAG << " rows cols - removes flag on tile at row col  \n" <<
+    cmd::EXPAND << " rows cols - work on tiles whose all neighbour mines are detected (works recursively)  \n" <<
+    cmd::RESIZE << " rows cols mines - resizes the board (use 0 for param to use previous settings)  \n" <<
     std::endl;
 }
 
 /* to break a tile */
-bool press(num_t r, num_t c) {
+bool pop(num_t r, num_t c) {
     if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == CLOSED) {
         Mineboard[r][c].state = OPENED;
         return true;
@@ -315,7 +316,6 @@ bool endgame() {
 int Minesweeper() {
 
     std::string cmd, token;
-    char cmd_in;
     num_t bindex, t; 
     void *buffer[4] {new char, new std::string, new std::string, new std::string};
 
@@ -336,9 +336,11 @@ int Minesweeper() {
         while (1) {
             if (cmd[t] == ' ') {
                 std::cout << "Token: " << token << '\n';
+                *(std::string*)buffer[bindex] = token;
                 token.clear();
             } else if (cmd[t] == '\0') {
                 std::cout << "Token: " << token << '\n';
+                *(std::string*)buffer[bindex] = token;
                 break;
             } else {
                 token.push_back(cmd[t]);
@@ -347,9 +349,9 @@ int Minesweeper() {
         }
         
         /* actions */
-        switch (cmd_in) {
+        switch ((char) toupper(cmd[0])) {
             case (cmd::POP): {
-                press(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
+                pop(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
             } break;
 
             case (cmd::FLAG): {
@@ -389,8 +391,3 @@ int Minesweeper() {
 int main() {
     return Minesweeper();
 }
-/*
-pending:
-recursive expansion
-recursive expansion on empty tiles
-*/
