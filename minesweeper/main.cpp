@@ -52,18 +52,6 @@ typedef enum {
     RESIZE  = 'r'  /* to resize the mineboard dimensions */
 } cmd;
 
-/* from character digit to number ; skips invalid digit character */
-num_t digitise(std::string __s) {
-    num_t num=0, tmp;
-    for (auto c: __s) {
-       tmp = (num_t) c;
-       if (40<=tmp && tmp<=57) {
-            num *= 10;
-            num += tmp-40;
-       }
-    }
-    return num;
-}
 
 /* sub-function of print to print single row elemnts of mineboard based on their data */
 void print_cnt(num_t r) {
@@ -315,9 +303,8 @@ bool endgame() {
 
 int Minesweeper() {
 
-    std::string cmd, token;
-    num_t bindex, t; 
-    void *buffer[4] {new char, new std::string, new std::string, new std::string};
+    char cmd_in;
+    num_t row_in, col_in, mines_in;
 
     srand(time(0)); // random seed for each program instance
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
@@ -329,41 +316,28 @@ int Minesweeper() {
     while (1) {
         print();
         std::cout << ">>> ";
-        std::cin >> cmd;
+        std::cin >> cmd_in;
 
-        /* command breakdown */
-        t = 0, bindex = 0;
-        while (1) {
-            if (cmd[t] == ' ') {
-                std::cout << "Token: " << token << '\n';
-                *(std::string*)buffer[bindex] = token;
-                token.clear();
-            } else if (cmd[t] == '\0') {
-                std::cout << "Token: " << token << '\n';
-                *(std::string*)buffer[bindex] = token;
-                break;
-            } else {
-                token.push_back(cmd[t]);
-            }
-            t++;
-        }
-        
         /* actions */
-        switch ((char) toupper(cmd[0])) {
+        switch (cmd_in) {
             case (cmd::POP): {
-                pop(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
+                std::cin >> row_in >> col_in;
+                pop(row_in, col_in);
             } break;
 
             case (cmd::FLAG): {
-                flag(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
+                std::cin >> row_in >> col_in;
+                flag(row_in, col_in);
             } break;
 
             case (cmd::UNFLAG): {
-                unflag(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
+                std::cin >> row_in >> col_in;
+                unflag(row_in, col_in);
             } break;
 
             case (cmd::EXPAND): {
-                expand(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]));
+                std::cin >> row_in >> col_in;
+                expand(row_in, col_in);
             } break;
 
             case (cmd::NEW): {
@@ -371,7 +345,8 @@ int Minesweeper() {
             } break;
 
             case (cmd::RESIZE): {
-                resize(digitise(*(std::string*)buffer[1]), digitise(*(std::string*)buffer[2]), digitise(*(std::string*)buffer[3]));
+                std::cin >> row_in >> col_in >> mines_in;
+                resize(row_in, col_in, mines_in);
                 std::cout << "\n----------BOARD-RESIZED----------\n";
                 newgame();
             } break;
@@ -383,11 +358,17 @@ int Minesweeper() {
             case (cmd::QUIT): {
                 return 0;
             } break;
+
+            default: {
+                std::cout << "Invalid Command! \n\n";
+            }
         }
     }
+
     return 0;
 }
 
 int main() {
-    return Minesweeper();
+    Minesweeper();
+    return 0;
 }
