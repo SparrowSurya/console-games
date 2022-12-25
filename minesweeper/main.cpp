@@ -1,43 +1,10 @@
 #include <iostream>
 #include <time.h>
-#include <cstdlib>
 
-/* settings */
+#include "game.h"
+#include "mineboard.cpp"
 
-#define MAXROW 8
-#define MAXCOL 12
-#define MINROW 2
-#define MINCOL 2
-
-/* unsigned datatype */
-typedef unsigned short num_t;
-
-/* tile states */
-typedef enum {
-    CLOSED,
-    OPENED,
-    FLAGGED
-} state_t;
-
-/* tile structure */
-typedef struct {
-    state_t state = CLOSED;
-    bool is_mine = false;
-    num_t mines = 0;
-} tile_t;
-
-/* coord struct having r, c info */
-typedef struct {
-    num_t r;
-    num_t c;
-}coord_t;
-
-/* global variables */
-
-tile_t **Mineboard = nullptr;
-num_t Rows = 0;
-num_t Cols = 0;
-num_t Mines = 0;
+Mineboard Board;
 
 /* various commands */
 typedef enum {
@@ -52,173 +19,7 @@ typedef enum {
     RESIZE  = 'r'  /* to resize the mineboard dimensions */
 } cmd;
 
-
-/* sub-function of print to print single row elemnts of mineboard based on their data */
-void print_cnt(num_t r) {
-    std::cout << '|';
-    for (num_t c = 0; c < Cols; c++) {
-
-        if (Mineboard[r][c].state == CLOSED) {
-            std::cout << (char)176 << (char)176 << (char)176 << '|';
-
-        } else if (Mineboard[r][c].state == OPENED) {
-
-            if (Mineboard[r][c].is_mine) {
-                std::cout << ' ' << (char)254 << ' ' << '|';
-            } else if (Mineboard[r][c].mines == 0) {
-                std::cout << "   |";
-            } else {
-                std::cout << ' ' << Mineboard[r][c].mines << ' ' << '|';
-            }
-        }
-        else if (Mineboard[r][c].state == FLAGGED) {
-            std::cout << ' ' << (char)35 << ' ' << '|';
-        } else {
-            throw "Unexpected cause for board tile has undefined state";
-        }
-    }
-    std::cout << '\n';
-}
-
-/* sub-function of print function to print single seperating row */
-void print_sep() {
-    std::cout << '+';
-    for (num_t i = 0; i < Cols; i++) {
-        std::cout << "---+";
-    }
-    std::cout << '\n';
-}
-
-/* outputs mineboard to console */
-void print() {
-    std::cout << '\n';
-    print_sep();
-    for (num_t i = 0; i < Rows; i++) {
-        print_cnt(i);
-        print_sep();
-    }
-    std::cout << '\n';
-}
-
-/* returns random number excluding end */
-num_t random(num_t end) {
-    return rand() % end;
-}
-
-/* erases all data to default in mineboard */
-void reset() {
-    for (num_t r = 0; r < Rows; r++) {
-        for (num_t c = 0; c < Cols; c++) {
-            Mineboard[r][c].is_mine = false;
-            Mineboard[r][c].mines = 0;
-            Mineboard[r][c].state = CLOSED;
-        }
-    }
-}
-
-/* fills adjacent tiles in given parameter */
-void get_adj_tiles(num_t r, num_t c, tile_t** adj_tiles) {
-    short rel_dir[8][2] = {
-        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
-    };
-    num_t index = 0;
-    
-    for (auto &d : rel_dir) {
-        if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            adj_tiles[index] = &(Mineboard[r + d[0]][c + d[1]]);
-            index++;
-        }
-    }
-    if (index<7) {
-        adj_tiles[index] = nullptr;
-    }
-}
-
-/* fills adjacent tiles coord in given parameter */
-void get_adj_tiles(num_t r, num_t c, coord_t** adj_tiles) {
-    short rel_dir[8][2] = {
-        {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
-    };
-    num_t index = 0;
-    
-    for (auto &d : rel_dir) {
-        if (0 <= (r + d[0]) && (r + d[0]) < Rows && 0 <= (c + d[1]) && (c + d[1]) < Cols) {
-            (*adj_tiles[index]).r = r + d[0];
-            (*adj_tiles[index]).c = c + d[1];
-            index++;
-        }
-    }
-    if (index<7) {
-        adj_tiles[index] = nullptr;
-    }
-}
-
-/* changes mines amount in adjacent tiles */
-void modify_adjacent_mines(num_t r, num_t c, short amount) {
-    tile_t** adj_tiles;
-    get_adj_tiles(r, c, adj_tiles);
-
-    for (num_t i=0; i<8; i++) {
-        if (adj_tiles[i] == nullptr) {
-            break;
-        } else {
-            (*adj_tiles[i]).mines += amount;
-        }
-    }
-}
-
-/* to generate mineboard */
-void generate() {
-    num_t m = Mines, r, c;
-    std::cout << "Mines at: ";
-    while (m > 0) {
-        r = random(Rows - 1);
-        c = random(Cols - 1);
-
-        if (Mineboard[r][c].is_mine == false) {
-            Mineboard[r][c].is_mine = true;
-            modify_adjacent_mines(r, c, 1);
-            m--;
-            std::cout << '('<< r << ", " << c << ") ";
-        }
-    }
-    std::cout << std::endl;
-}
-
-/* condition check for recursive expansion */
-bool is_expansion_possible(num_t r, num_t c, coord_t* adj_tiles[8]) {
-    num_t flags = 0;
-    if (Mineboard[r][c].state == CLOSED) {
-        for (num_t i = 0; i < 8; i++) {
-            if (adj_tiles[i] == nullptr) {
-                break;
-            }
-            if (Mineboard[(*adj_tiles)[i].r][(*adj_tiles)[i].c].state == FLAGGED) {
-                flags++;
-            }
-        }
-
-        if (flags == Mineboard[r][c].mines) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-    return false;
-}
-
-/* prevents the first selected tile to be mine */
-void first_guess_wrong(num_t r, num_t c) {
-    modify_adjacent_mines(r, c, -1);
-    do {
-        r = random(Rows);
-        c = random(Cols);
-    } while (Mineboard[r][c].is_mine == true);
-    modify_adjacent_mines(r, c, +1);
-}
-
-
-void info() {
+void show_info() {
     std::cout   << std::endl;
     std::cout   << "Commands: \n\n" <<
     cmd::QUIT   << " - to quit the program  \n" <<
@@ -233,88 +34,20 @@ void info() {
     std::endl;
 }
 
-/* to break a tile */
-bool pop(num_t r, num_t c) {
-    if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == CLOSED) {
-        Mineboard[r][c].state = OPENED;
-        return true;
-    }
-    return false;
-}
 
-bool flag(num_t r, num_t c) {
-    if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == CLOSED) {
-        Mineboard[r][c].state = FLAGGED;
-        return true;
-    }
-    return false;
-}
-
-bool unflag(num_t r, num_t c) {
-    if (0 <= r && r < Rows && 0 <= c && c < Cols && Mineboard[r][c].state == FLAGGED) {
-        Mineboard[r][c].state = CLOSED;
-        return true;
-    }
-    return false;
-}
-
-void expand(num_t r, num_t c) {
-    coord_t *neighbours[8];
-    get_adj_tiles(r, c, neighbours);
-    if (is_expansion_possible(r, c, neighbours)) {
-        for (num_t i=0; i<8; i++) {
-            if (Mineboard[r][c].state == CLOSED) {
-                Mineboard[r][c].state = OPENED;
-                expand((*neighbours)[i].r, (*neighbours)[i].c);
-            }
-        }
-    }
-}
-
-void newgame() {
-    reset();
-    generate();
-    std::cout << "\n----------NEW-GAME----------\n";
-}
-
-bool resize(num_t rows, num_t cols, num_t mines) {
-    if (MINROW > rows && rows > MAXROW && MINCOL > cols && cols > MAXCOL) {
-        return false;
-    }
-    if (Mineboard != nullptr) {
-        delete[] Mineboard;
-        Mineboard = nullptr;
-    }
-
-    Rows = rows;
-    Cols = cols;
-    Mines = mines;
-    Mineboard = new tile_t *[Rows];
-
-    for (num_t i = 0; i < Cols; i++) {
-        Mineboard[i] = new tile_t[Cols];
-    }
-    return true;
-}
-
-bool endgame() {
-    return false;
-}
-
-int Minesweeper() {
+void GameLoop() {
+    srand(time(0));
+    Board.Init();
 
     char cmd_in;
-    num_t row_in, col_in, mines_in;
+    short row_in, col_in, mines_in;
 
-    srand(time(0)); // random seed for each program instance
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
+    Board.Generate();
 
-    resize(7, 10, 10);
-    generate();
-
-    /* gameloop */
+    /* loop */
     while (1) {
-        print();
+        Board.Print();
         std::cout << ">>> ";
         std::cin >> cmd_in;
 
@@ -322,41 +55,43 @@ int Minesweeper() {
         switch (cmd_in) {
             case (cmd::POP): {
                 std::cin >> row_in >> col_in;
-                pop(row_in, col_in);
+                Board.Pop(row_in, col_in);
             } break;
 
             case (cmd::FLAG): {
                 std::cin >> row_in >> col_in;
-                flag(row_in, col_in);
+                Board.Flag(row_in, col_in);
             } break;
 
             case (cmd::UNFLAG): {
                 std::cin >> row_in >> col_in;
-                unflag(row_in, col_in);
+                Board.Unflag(row_in, col_in);
             } break;
 
             case (cmd::EXPAND): {
                 std::cin >> row_in >> col_in;
-                expand(row_in, col_in);
+                Board.Expand(row_in, col_in);
             } break;
 
             case (cmd::NEW): {
-                newgame();
+                Board.Reset();
+                Board.Generate();
+                std::cout << "\n----------New-Game----------\n";
             } break;
 
             case (cmd::RESIZE): {
                 std::cin >> row_in >> col_in >> mines_in;
-                resize(row_in, col_in, mines_in);
-                std::cout << "\n----------BOARD-RESIZED----------\n";
-                newgame();
+                Board.Resize(row_in, col_in, mines_in);
+                Board.Generate();
+                std::cout << "\n----------New-Game----------\n";
             } break;
 
             case (cmd::CMDS): {
-                info();
+                show_info();
             } break;
 
             case (cmd::QUIT): {
-                return 0;
+                return;
             } break;
 
             default: {
@@ -364,11 +99,9 @@ int Minesweeper() {
             }
         }
     }
-
-    return 0;
 }
 
 int main() {
-    Minesweeper();
+    GameLoop();
     return 0;
 }
