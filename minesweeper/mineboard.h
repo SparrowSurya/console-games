@@ -4,29 +4,24 @@
 #include "game.h"
 
 class Mineboard {
-    // private:
-    public:
+    private:
         tile_t** board = nullptr;
         short rows  = 7;
         short cols  = 10;
-        short mines = 1;
+        short mines = 10;
 
-        short GetRows();
-        short GetCols();
-        short GetMines();
         void Generate();
         void Ignore(short, short);
         void PrintL();
-        void PrintM(short n);
+        void PrintR(short n);
         short Random(short, short);
-        void Init();
         void AdjustNeighbours(short, short, short);
-        void Debug();
     
+    public:
+        void Init();
         Mineboard() = default;
-        Mineboard(short, short, short);
         void Resize(short, short, short);
-        void FillNeighbours(short, short, tile_t**);
+        void FillNeighbours(short, short, adj_t*);
         void GetNeighbours(short, short, coord_t**);
         void Expand(short, short);
         void Flag(short, short);
@@ -34,7 +29,11 @@ class Mineboard {
         void Pop(short, short);
         void Print();
         void Reset();
+        short GetRows();
+        short GetCols();
+        short GetMines();
         inline bool InBounds(short, short);
+        void Debug();
 };
 
 #endif

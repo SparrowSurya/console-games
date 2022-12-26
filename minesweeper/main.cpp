@@ -41,7 +41,6 @@ void GameLoop() {
     Board.Init();
 
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
-    Board.Generate();
     show_info();
 
     char cmd_in;
@@ -77,14 +76,12 @@ void GameLoop() {
 
             case (cmd::NEW): {
                 Board.Reset();
-                Board.Generate();
                 std::cout << "\n----------New-Game----------\n";
             } break;
 
             case (cmd::RESIZE): {
                 std::cin >> row_in >> col_in >> mines_in;
                 Board.Resize(row_in, col_in, mines_in);
-                Board.Generate();
                 std::cout << "\n----------New-Game----------\n";
             } break;
 

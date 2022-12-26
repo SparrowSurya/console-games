@@ -4,32 +4,34 @@
 #include "game.h"
 #include "mineboard.h"
 
-
+/* Places mines inside the board */
 void Mineboard::Generate() {
-    std::cout << "Generating... \n";
     short r, c;
     for (short i=0; i<this->mines; i++) {
-        r = 1/* this->Random(0, this->rows) */; // testing purpose 
-        c = 1/* this->Random(0, this->cols) */;
+        r = this->Random(0, this->rows);
+        c = this->Random(0, this->cols);
         this->board[r][c].is_mine = true;
         this->AdjustNeighbours(r, c, +1);
     }
-    std::cout << "Generated! \n";
 }
 
+/* If board dont exists then creates and generate it */
 void Mineboard::Init() {
-    std::cout << "Initialising... \n";
     if (this->board == nullptr) {
         this->board = new tile_t*[this->rows];
         for (short r=0; r<this->rows; r++) {
             this->board[r] = new tile_t[this->cols];
         }
+        this->Generate();
     }
-    std::cout << "Mineboard Initialised! \n";
 }
 
+/* writes the coordinates of neighbous tiles 
+ * writes nullptr if less neighbours
+ * neighbour size 8
+ * uses dynamic allocation
+ */
 void Mineboard::GetNeighbours(short r, short c, coord_t** empty) {
-    std::cout << "Fetching neighbours coords from " << r << ',' << c << "... \n";
     short index = 0;
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
@@ -45,63 +47,68 @@ void Mineboard::GetNeighbours(short r, short c, coord_t** empty) {
     if (index<8) {
         empty[index] = nullptr;
     }
-    std::cout << "Neighbours coords Fetched! \n";
 }
 
-void Mineboard::FillNeighbours(short r, short c, tile_t** empty) {
-    std::cout << "Fetching neighbours from " << r << ',' << c << "... \n";
-    short index = 0;
+/* writes address of neighbours
+ * writes nullptr if less neighbours
+ */
+void Mineboard::FillNeighbours(short r, short c, adj_t* empty) {
+    short i = 0;
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
     for (auto &d : rel_dir) {
         if (this->InBounds(r+d[1], c+d[0])) {
-            std::cout << '(' << r+d[1] << ',' << c+d[0] << ')' << '\t';
-            empty[index] = &(this->board[r+d[1]][c+d[0]]);
-            std::cout << &(this->board[r+d[1]][c+d[0]]) << '\n';
-            index++;
+            (*empty).adj[i] = &(this->board[r+d[1]][c+d[0]]);
+            i++;
         }
     }
-    if (index<8) {
-        empty[index] = nullptr;
+    if (i<8) {
+        (*empty).adj[i] = nullptr;
     }
-    std::cout << "Neighbours Fetched! \n";
 }
 
+/* adds the delta value to neighbour mines count */
 void Mineboard::AdjustNeighbours(short r, short c, short delta) {
-    std::cout << "Adjusting (" << r << ',' << c << ")`s neighbours mines count by " << delta << '\n';
-    tile_t *adj[8];
-    this->FillNeighbours(r, c, adj); // works fine & also debugs correct address
-    for (short i=0; ((i<8) & (adj[i]!=nullptr)) ; i++) {
-        std::cout << "Index " << i << " Address " << &((*adj)[i]) << '\n'; // debugs & updates wrong tiles
-        ((*adj)[i]).adj_mines += delta;
+    adj_t adj;
+    this->FillNeighbours(r, c, &adj);
+    for (short i=0; ((i<8) & (adj.adj[i]!=nullptr)) ; i++) {
+        (*adj.adj[i]).adj_mines += delta;
     }
-    std::cout << "Neighbours Adjusted! \n";
 }
 
+/* If mine at r,c exists then moves the mine to unexplored tile
+ * random selection approach
+ * caution: goes to infinite loop if no suck tile exists
+*/
 void Mineboard::Ignore(short r, short c) {
     if (this->InBounds(r, c) && this->board[r][c].is_mine) {
-        std::cout << "Ignoring the mine click at " << r << ',' << c << '\n';
         this->AdjustNeighbours(r, c, -1);
         do {
             r = this->Random(0, this->rows);
             c = this->Random(0, this->cols);
         } while (this->board[r][c].is_mine==true);
         this->AdjustNeighbours(r, c, 1);
-        std::cout << "Ignored and moved mine to another unexplored location \n";
     }
 }
 
+/* restores the board to default values and generates */
 void Mineboard::Reset() {
-    std::cout << "Resetting... \n";
-    std::cout << "Reset done! \n";    
+    for (short r=0; r<this->GetRows(); r++) {
+        for (short c=0; c<this->GetCols(); c++) {
+            this->board[r][c].adj_mines = 0;
+            this->board[r][c].is_mine = false;
+            this->board[r][c].state = CLOSED;
+        }
+    }
+    this->Generate();
 }
 
+/* frees the board and creates new allocation and generates */
 void Mineboard::Resize(short rows, short cols, short mines = 0) {
     if (rows<MINROW || MAXROW<rows || cols<MINCOL || MAXCOL<cols) {
         return;
     }
-    std::cout << "Resizing to " << rows << ',' << cols << ',' << mines << '\n';
     for (short r=0; r<this->rows; r++) {
         delete[] this->board[r];
     }
@@ -111,36 +118,41 @@ void Mineboard::Resize(short rows, short cols, short mines = 0) {
     this->cols = cols;
     this->mines = mines==0? this->mines: mines;
     this->Init();
-    std::cout << "Resized!";
 }
 
+/* if r,c tile hasa no adjacent mines then Pops all neighbour tiles with same property
+ * does same for all neighbours recursively
+ */
 void Mineboard::Expand(short r, short c) {
-    std::cout << "Expanding from " << r << ',' << c << "... \n";
-    std::cout << "Expansion done at " << r << ',' << c << '\n';  
 }
 
+/* opens the tile at r,c */
 void Mineboard::Pop(short r, short c) {
     if (this->InBounds(r, c)) {
         this->board[r][c].state = OPENED;
     }
 }
 
+/* flags the closed tile at r,c */
 void Mineboard::Flag(short r, short c) {
     if (this->InBounds(r, c) && this->board[r][c].state == CLOSED) {
         this->board[r][c].state = FLAGGED;
     }
 }
 
+/* unflags the opened tile at r,c */
 void Mineboard::Unflag(short r, short c) {
     if (this->InBounds(r, c) && this->board[r][c].state == FLAGGED) {
         this->board[r][c].state = CLOSED;
     }
 }
 
+/* returns random int including min but not max */
 short Mineboard::Random(short min, short max) {
     return min + (rand() % max);
 }
 
+/* prints the line seperator */
 void Mineboard::PrintL() {
     std::cout << '+';
     for (short i=0; i<this->cols; i++) {
@@ -149,7 +161,8 @@ void Mineboard::PrintL() {
     std::cout << '\n';
 }
 
-void Mineboard::PrintM(short r) {
+/* prints the row */
+void Mineboard::PrintR(short r) {
     std::cout << '|';
     for (short c=0; c<this->cols; c++) {
         if (this->board[r][c].state==CLOSED) {
@@ -171,32 +184,38 @@ void Mineboard::PrintM(short r) {
     std::cout << '\n';
 }
 
+/* prints the board */
 void Mineboard::Print() {
     std::cout << '\n';
     this->PrintL();
     for (short r=0; r<this->rows; r++) {
-        this->PrintM(r);
+        this->PrintR(r);
         this->PrintL();
     }
     std::cout << '\n';
 }
 
+/* returns board row count */
 short Mineboard::GetRows() {
     return this->rows;
 }
 
+/* returns board column count */
 short Mineboard::GetCols() {
     return this->cols;
 }
 
+/* returns board mine count */
 short Mineboard::GetMines() {
     return this->mines;
 }
 
+/* if r,c lies in board */
 inline bool Mineboard::InBounds(short r, short c) {
     return 0 <= r && r<this->rows && 0<=c && c<this->cols;
 }
 
+/* outputs the address of board tiles */
 void Mineboard::Debug() {
     for (short i=0; i<this->rows; i++) {
         for (short j=0; j<this->cols; j++) {
