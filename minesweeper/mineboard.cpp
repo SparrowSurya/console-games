@@ -9,7 +9,7 @@ void Mineboard::Generate() {
     std::cout << "Generating... \n";
     short r, c;
     for (short i=0; i<this->mines; i++) {
-        r = 1/* this->Random(0, this->rows) */;
+        r = 1/* this->Random(0, this->rows) */; // testing purpose 
         c = 1/* this->Random(0, this->cols) */;
         this->board[r][c].is_mine = true;
         this->AdjustNeighbours(r, c, +1);
@@ -71,9 +71,9 @@ void Mineboard::FillNeighbours(short r, short c, tile_t** empty) {
 void Mineboard::AdjustNeighbours(short r, short c, short delta) {
     std::cout << "Adjusting (" << r << ',' << c << ")`s neighbours mines count by " << delta << '\n';
     tile_t *adj[8];
-    this->FillNeighbours(r, c, adj);
+    this->FillNeighbours(r, c, adj); // works fine & also debugs correct address
     for (short i=0; ((i<8) & (adj[i]!=nullptr)) ; i++) {
-        std::cout << "Index " << i << " Address " << &((*adj)[i]) << '\n';
+        std::cout << "Index " << i << " Address " << &((*adj)[i]) << '\n'; // debugs & updates wrong tiles
         ((*adj)[i]).adj_mines += delta;
     }
     std::cout << "Neighbours Adjusted! \n";

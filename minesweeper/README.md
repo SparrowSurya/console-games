@@ -13,7 +13,7 @@
 + `main.cpp`  contains logic for conversation
 
 ### Status:
-```
-Problem: Mineboard::AdjustNeighbours unexpectdly updating wrong tiles
-Reason: tile *adj[8] after being filled by correct neighbours causes wrong neighbours to get updated
-```
+
+**Problem**: Mineboard::AdjustNeighbours unexpectdly updating wrong tiles
+
+**Reason**: tile *adj[8] after being filled by correct neighbours causes wrong neighbours to get updated
