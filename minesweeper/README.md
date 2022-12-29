@@ -1,6 +1,7 @@
 # Minesweeper in Console
 
-[![Game running state](https://img.shields.io/badge/status-passing-success)]()
+[![Game Compilation](https://img.shields.io/badge/compiling-True-blue)]()
+[![Game running state](https://img.shields.io/badge/status-failing-red)]()
 [![Language used](https://img.shields.io/badge/c++-14-blue)]()
 [![Compiler used](https://img.shields.io/badge/g++-8.1.0-blue)]()
 [![Platform used](https://img.shields.io/badge/windows-10-informational)]()
@@ -12,7 +13,13 @@
 + `mineboard.cpp`  include definitions
 + `main.cpp`  contains logic for conversation
 
-<!-- ### Status:
+### Failure:
+```
+cause: Expand feature
+Not yet debuged! 
+```
 
-**Working**
- -->
+### Pending:
++ board indexing
++ status display
++ gameover 

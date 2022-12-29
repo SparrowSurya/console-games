@@ -17,13 +17,14 @@ void Mineboard::Generate() {
 
 /* If board dont exists then creates and generate it */
 void Mineboard::Init() {
-    if (this->board == nullptr) {
-        this->board = new tile_t*[this->rows];
-        for (short r=0; r<this->rows; r++) {
-            this->board[r] = new tile_t[this->cols];
-        }
-        this->Generate();
+    if (this->board != nullptr) {
+        return;
     }
+    this->board = new tile_t*[this->rows];
+    for (short r=0; r<this->rows; r++) {
+        this->board[r] = new tile_t[this->cols];
+    }
+    this->Generate();
 }
 
 /* writes the coordinates of neighbous tiles 
@@ -31,28 +32,26 @@ void Mineboard::Init() {
  * neighbour size 8
  * uses dynamic allocation
  */
-void Mineboard::GetNeighbours(short r, short c, coord_t** empty) {
+void Mineboard::FetchNeighboursLoc(short r, short c, struct adj<coord_t>* empty) {
     short index = 0;
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
     for (auto &d : rel_dir) {
         if (this->InBounds(r+d[1], c+d[0])) {
-            empty[index] = new coord_t;
-            (*empty)[index].r = r + d[0];
-            (*empty)[index].c = c + d[1];
+            (*empty).adj[index] = new coord_t;
             index++;
         }
     }
     if (index<8) {
-        empty[index] = nullptr;
+        (*empty).adj[index] = nullptr;
     }
 }
 
 /* writes address of neighbours
  * writes nullptr if less neighbours
  */
-void Mineboard::FillNeighbours(short r, short c, adj_t* empty) {
+void Mineboard::FillNeighbours(short r, short c, struct adj<tile_t>* empty) {
     short i = 0;
     short rel_dir[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
@@ -70,7 +69,7 @@ void Mineboard::FillNeighbours(short r, short c, adj_t* empty) {
 
 /* adds the delta value to neighbour mines count */
 void Mineboard::AdjustNeighbours(short r, short c, short delta) {
-    adj_t adj;
+    struct adj<tile_t> adj;
     this->FillNeighbours(r, c, &adj);
     for (short i=0; ((i<8) & (adj.adj[i]!=nullptr)) ; i++) {
         (*adj.adj[i]).adj_mines += delta;
@@ -82,14 +81,15 @@ void Mineboard::AdjustNeighbours(short r, short c, short delta) {
  * caution: goes to infinite loop if no suck tile exists
 */
 void Mineboard::Ignore(short r, short c) {
-    if (this->InBounds(r, c) && this->board[r][c].is_mine) {
-        this->AdjustNeighbours(r, c, -1);
-        do {
-            r = this->Random(0, this->rows);
-            c = this->Random(0, this->cols);
-        } while (this->board[r][c].is_mine==true);
-        this->AdjustNeighbours(r, c, 1);
+    if (!this->InBounds(r, c) || !this->board[r][c].is_mine) {
+        return;
     }
+    this->AdjustNeighbours(r, c, -1);
+    do {
+        r = this->Random(0, this->rows);
+        c = this->Random(0, this->cols);
+    } while (this->board[r][c].is_mine==true);
+    this->AdjustNeighbours(r, c, 1);
 }
 
 /* restores the board to default values and generates */
@@ -120,15 +120,51 @@ void Mineboard::Resize(short rows, short cols, short mines = 0) {
     this->Init();
 }
 
+/* whether tile is subject to expansion */
+bool Mineboard::IsExpandable(short r, short c) {
+    short flags = 0;
+    struct adj<tile_t> adj;
+    this->FillNeighbours(r, c, &adj);
+    for (short i=0; ((i<8) & (adj.adj[i]!=nullptr)) ; i++) {
+        if ((*adj.adj[i]).state == FLAGGED) {
+            flags++;
+        }
+    }
+    return flags == this->board[r][c].adj_mines;
+}
+
 /* if r,c tile hasa no adjacent mines then Pops all neighbour tiles with same property
  * does same for all neighbours recursively
+ * frees allocated memory
  */
 void Mineboard::Expand(short r, short c) {
+    if (!this->IsExpandable(r, c)) {
+        return;
+    }
+    this->board[r][c].state = OPENED;
+    struct adj<coord_t> adj;
+    this->FetchNeighboursLoc(r, c, &adj);
+    for (short i=0; ((i<8) & (adj.adj[i]!=nullptr)) ; i++) {
+        this->Expand(adj.adj[i]->r, adj.adj[i]->c);
+    }
+    this->FreeNeighboursLoc(&adj);
+}
+
+/* free the occupied memory used in expand method */
+void Mineboard::FreeNeighboursLoc(struct adj<coord_t>* empty) {
+    for (short i=0; ((i<8) & ((*empty).adj[i]!=nullptr)) ; i++) {
+        delete (*empty).adj[i];
+    }    
 }
 
 /* opens the tile at r,c */
 void Mineboard::Pop(short r, short c) {
-    if (this->InBounds(r, c)) {
+    if (!this->InBounds(r, c)) {
+        return;
+    }
+    if (this->board[r][c].adj_mines == 0) {
+        this->Expand(r, c);
+    } else {
         this->board[r][c].state = OPENED;
     }
 }
@@ -215,12 +251,3 @@ inline bool Mineboard::InBounds(short r, short c) {
     return 0 <= r && r<this->rows && 0<=c && c<this->cols;
 }
 
-/* outputs the address of board tiles */
-void Mineboard::Debug() {
-    for (short i=0; i<this->rows; i++) {
-        for (short j=0; j<this->cols; j++) {
-            std::cout << &(this->board[i][j]) << ' ';
-        }
-        std::cout << '\n';
-    }
-}

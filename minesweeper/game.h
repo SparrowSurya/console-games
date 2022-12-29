@@ -22,15 +22,16 @@ typedef struct {
     short adj_mines = 0;
 } tile_t;
 
-/* struct to hold neighbours */
-typedef struct {
-    tile_t* adj[8];
-} adj_t;
-
 /* coord having row, column info */
 typedef struct {
     short r, c;
 } coord_t;
+
+/* struct to hold neighbours */
+template <typename T>
+struct adj {
+    T* adj[8];
+};
 
 
 #endif

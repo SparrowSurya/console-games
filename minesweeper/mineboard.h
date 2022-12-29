@@ -16,13 +16,15 @@ class Mineboard {
         void PrintR(short n);
         short Random(short, short);
         void AdjustNeighbours(short, short, short);
+        bool IsExpandable(short, short);
+        void FillNeighbours(short, short, struct adj<tile_t>*);
+        void FetchNeighboursLoc(short, short, struct adj<coord_t>*);
+        void FreeNeighboursLoc(struct adj<coord_t>*);
     
     public:
         void Init();
         Mineboard() = default;
         void Resize(short, short, short);
-        void FillNeighbours(short, short, adj_t*);
-        void GetNeighbours(short, short, coord_t**);
         void Expand(short, short);
         void Flag(short, short);
         void Unflag(short, short);
@@ -33,7 +35,6 @@ class Mineboard {
         short GetCols();
         short GetMines();
         inline bool InBounds(short, short);
-        void Debug();
 };
 
 #endif

@@ -27,8 +27,8 @@ void show_info() {
     (char) cmd::CMDS   << " - displays all the commands  \n" <<
     (char) cmd::NEW    << " - starts new game  \n" <<
     (char) cmd::STATUS << " - show status of game  \n" <<
-    (char) cmd::POP    << " rows cols - breks the tilw at row col  \n" <<
-    (char) cmd::FLAG   << " rows cols - flags the tilw at row col  \n" <<
+    (char) cmd::POP    << " rows cols - breks the tile at row col  \n" <<
+    (char) cmd::FLAG   << " rows cols - flags the tile at row col  \n" <<
     (char) cmd::UNFLAG << " rows cols - removes flag on tile at row col  \n" <<
     (char) cmd::EXPAND << " rows cols - work on tiles whose all neighbour mines are detected (works recursively)  \n" <<
     (char) cmd::RESIZE << " rows cols mines - resizes the board (use 0 for param to use previous settings)  \n" <<
@@ -43,12 +43,14 @@ void GameLoop() {
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
     show_info();
 
-    char cmd_in;
+    char cmd_in = 0;
     short row_in, col_in, mines_in;
 
     /* loop */
     while (1) {
-        Board.Print();
+        if (cmd_in != cmd::CMDS) {
+            Board.Print();
+        }
         std::cout << ">>> ";
         std::cin >> cmd_in;
 
@@ -74,6 +76,10 @@ void GameLoop() {
                 Board.Expand(row_in, col_in);
             } break;
 
+            case (cmd::STATUS): {
+                std::cout << "Not Implemented! \n\n";
+            } break;
+
             case (cmd::NEW): {
                 Board.Reset();
                 std::cout << "\n----------New-Game----------\n";
@@ -94,7 +100,7 @@ void GameLoop() {
             } break;
 
             default: {
-                std::cout << "Invalid Command! \n\n";
+                std::cout << "Invalid Command! \nUse " << (char) cmd::CMDS << " to get commands! \n\n";
             }
         }
     }
