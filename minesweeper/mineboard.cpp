@@ -1,5 +1,6 @@
 #include <iostream>
 #include <time.h>
+#include<iomanip>
 
 #include "game.h"
 #include "mineboard.h"
@@ -266,11 +267,15 @@ void Mineboard::PrintR(short r, bool conclude = false) {
             throw "Unexpected!  board tile has undefined state";
         }
     }
-    std::cout << '\n';
+    std::cout << std::setw(4) << std::setfill(' ') << r << '\n';
 }
 
 /* prints the board */
 void Mineboard::Print(bool conclude = false) {
+    std::cout << '\n' << ' ';
+    for (int i=0; i<this->cols; i++) {
+        std::cout << std::setw(3) << std::setfill(' ') << i << ' ';
+    }
     std::cout << '\n';
     this->PrintL();
     for (short r=0; r<this->rows; r++) {
