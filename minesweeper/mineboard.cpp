@@ -8,8 +8,8 @@
 void Mineboard::Generate() {
     short r, c;
     for (short i=0; i<this->mines; i++) {
-        r = this->Random(0, this->rows);
-        c = this->Random(0, this->cols);
+        r = 1; //mthis->Random(0, this->rows);
+        c = 1; //mthis->Random(0, this->cols);
         this->board[r][c].is_mine = true;
         this->AdjustNeighbours(r, c, +1);
         std::cout << r << ' ' << c << '\n';
@@ -112,7 +112,7 @@ void Mineboard::Reset() {
 
 /* frees the board and creates new allocation and generates */
 bool Mineboard::Resize(short rows, short cols, short mines = 0) {
-    if (rows<MINROW || MAXROW<rows || cols<MINCOL || MAXCOL<cols || mines<1 || (rows*cols)<=mines) {
+    if (rows<MINROW || MAXROW<rows || cols<MINCOL || MAXCOL<cols || mines<0 || (rows*cols)<=mines) {
         return false;
     }
     for (short r=0; r<this->rows; r++) {
@@ -128,11 +128,11 @@ bool Mineboard::Resize(short rows, short cols, short mines = 0) {
 }
 
 /* whether tile is subject to expansion 
- * true if 
- * no of neighbours flag equals the no of adjacent mines and tile is opened
+ * true if
+ * no of neighbours flag equals the no of adjacent mines
  */
 bool Mineboard::IsExpandable(short r, short c) {
-    if (this->board[r][c].state != OPENED) {
+    if (this->board[r][c].state == FLAGGED) {
         return false;
     }
     short flags = 0;
@@ -151,7 +151,7 @@ bool Mineboard::IsExpandable(short r, short c) {
  * frees allocated memory
  */
 bool Mineboard::Expand(short r, short c) {
-    if (!this->InBounds(r, c) || (!this->IsExpandable(r, c))) {
+    if (!(this->InBounds(r, c) && this->IsExpandable(r, c))) {
         return false;
     }
     this->PopOne(r, c);
@@ -197,10 +197,9 @@ bool Mineboard::Pop(short r, short c) {
     if (!this->InBounds(r, c)) {
         return false;
     }
+    this->PopOne(r, c);
     if (this->board[r][c].adj_mines == 0) {
         this->Expand(r, c);
-    } else {
-        this->PopOne(r, c);
     }
     return true;
 }

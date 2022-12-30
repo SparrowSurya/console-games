@@ -8,7 +8,7 @@ class Mineboard {
         tile_t** board = nullptr;
         short rows  = 7;
         short cols  = 10;
-        short mines = 10;
+        short mines = 1;
         bool explosion = false;
         short tile_broken = 0;
         short tile_flagged = 0;
