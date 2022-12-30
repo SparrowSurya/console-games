@@ -1,7 +1,7 @@
 # Minesweeper in Console
 
 [![Game Compilation](https://img.shields.io/badge/compiling-True-blue)]()
-[![Game running state](https://img.shields.io/badge/status-passing-success)]()
+[![Game running state](https://img.shields.io/badge/status-passing-orange)]()
 [![Language used](https://img.shields.io/badge/c++-14-blue)]()
 [![Compiler used](https://img.shields.io/badge/g++-8.1.0-blue)]()
 [![Platform used](https://img.shields.io/badge/windows-10-informational)]()
@@ -14,7 +14,5 @@
 + `main.cpp`  contains logic for conversation
 
 
-### Pending:
-+ board indexing
-+ status display
-+ gameover 
+### Report:
+    Chances are still there that malfunction may occur!

@@ -4,7 +4,6 @@
 #include "game.h"
 #include "mineboard.cpp"
 
-Mineboard Board;
 
 /* various commands */
 typedef enum {
@@ -38,6 +37,7 @@ void show_info() {
 
 void GameLoop() {
     srand(time(0));
+    Mineboard Board;
     Board.Init();
 
     std::cout << '\n' << "--------------------Minesweeper--------------------" << "\n\n";
@@ -51,33 +51,46 @@ void GameLoop() {
         if (cmd_in != cmd::CMDS) {
             Board.Print();
         }
-        std::cout << ">>> ";
+        std::cout << (char)175 << ' ';
         std::cin >> cmd_in;
 
         /* actions */
         switch (cmd_in) {
             case (cmd::POP): {
                 std::cin >> row_in >> col_in;
-                Board.Pop(row_in, col_in);
+                if (!Board.Pop(row_in, col_in)) {
+                    std::cout << "Invalid tile to pop \n";
+                }
             } break;
 
             case (cmd::FLAG): {
                 std::cin >> row_in >> col_in;
-                Board.Flag(row_in, col_in);
+                if (!Board.Flag(row_in, col_in)) {
+                    std::cout << "Invalid tile to flag \n";
+                }
             } break;
 
             case (cmd::UNFLAG): {
                 std::cin >> row_in >> col_in;
-                Board.Unflag(row_in, col_in);
+                if (!Board.Unflag(row_in, col_in)) {
+                    std::cout << "Invalid tile to unflag \n";
+                }
             } break;
 
             case (cmd::EXPAND): {
                 std::cin >> row_in >> col_in;
-                Board.Expand(row_in, col_in);
+                if (!Board.Expand(row_in, col_in)) {
+                    std::cout << "Invalid tile to expand \n";
+                }
             } break;
 
             case (cmd::STATUS): {
-                std::cout << "Not Implemented! \n\n";
+                std::cout <<
+                    "Total Tiles: "   << Board.GetRows()*Board.GetCols() << '\n' <<
+                    "Total Mines: "   << Board.GetMines()                << '\n' <<
+                    "Tiles Broken: "  << Board.GetBrokenTiles()          << '\n' <<
+                    "Tiles Flagged: " << Board.GetFlaggedTiles()         << '\n' <<
+                    '\n';
             } break;
 
             case (cmd::NEW): {
@@ -87,8 +100,13 @@ void GameLoop() {
 
             case (cmd::RESIZE): {
                 std::cin >> row_in >> col_in >> mines_in;
-                Board.Resize(row_in, col_in, mines_in);
-                std::cout << "\n----------New-Game----------\n";
+                if (!Board.Resize(row_in, col_in, mines_in)) {
+                    std::cout << "Invalid Constraints to resize board! \n" << 
+                            "Rows defined range: [" << MINROW << ',' << MAXROW << "] \n" <<
+                            "Cows defined range: [" << MINCOL << ',' << MAXCOL << "] \n";
+                } else {
+                    std::cout << "\n----------New-Game----------\n";
+                }
             } break;
 
             case (cmd::CMDS): {
@@ -100,8 +118,27 @@ void GameLoop() {
             } break;
 
             default: {
-                std::cout << "Invalid Command! \nUse " << (char) cmd::CMDS << " to get commands! \n\n";
+                std::cout << "Invalid Command! \nUse \'" << (char) cmd::CMDS << "\' to get commands! \n\n";
             }
+        }
+
+        /* game won|lost|continue decision */
+        if (Board.Explosion()) {
+            Board.Print(true);
+            std::cout << "You Lost! \n";
+        } else if (Board.Demined()) {
+            std::cout << "You Won! \n";
+        } else {
+            continue;
+        }
+        std::cout << "Quit the game? [Y/n]";
+        std::cin >> cmd_in;
+
+        if (cmd_in == 'Y') {
+            return;
+        } else {
+            Board.Reset();
+            std::cout << "\n----------New-Game----------\n";
         }
     }
 }
