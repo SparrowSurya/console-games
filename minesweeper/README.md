@@ -14,6 +14,19 @@
 + `main.cpp`  contains logic for conversation
 
 
-```
-Hopefully its finished!
-```
+### Requirement
++ c++ compiler
+
+
+### How to Play
+1. Get the code files in your local machine.
+2. Navigate to `minesweeper` directory.
+3. In terminal, compile the file `main.cpp` using the compiler
+4. Run the generated executable file
+
+
+### Game Features
++ Runs in terminal
++ Command based interaction
++ Mineboard basic features (excluding timer)
+

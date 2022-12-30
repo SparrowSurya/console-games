@@ -195,7 +195,7 @@ void Mineboard::PopOne(short r, short c) {
 
 /* opens the tile at r,c && handles expand if tile has no mines around */
 bool Mineboard::Pop(short r, short c) {
-    if (!this->InBounds(r, c)) {
+    if (!this->InBounds(r, c) & (this->board[r][c].state==CLOSED)) {
         return false;
     }
     this->PopOne(r, c);
