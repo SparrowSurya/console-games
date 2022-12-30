@@ -34,12 +34,14 @@ void Mineboard::Init() {
  */
 void Mineboard::FetchNeighboursLoc(short r, short c, struct adj<coord_t>* empty) {
     short index = 0;
-    short rel_dir[8][2] = {
+    short rel_dir_rc[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
-    for (auto &d : rel_dir) {
+    for (auto &d : rel_dir_rc) {
         if (this->InBounds(r+d[1], c+d[0])) {
             (*empty).adj[index] = new coord_t;
+            (*empty).adj[index]->r = r+d[1];
+            (*empty).adj[index]->c = c+d[0];
             index++;
         }
     }
@@ -53,10 +55,10 @@ void Mineboard::FetchNeighboursLoc(short r, short c, struct adj<coord_t>* empty)
  */
 void Mineboard::FillNeighbours(short r, short c, struct adj<tile_t>* empty) {
     short i = 0;
-    short rel_dir[8][2] = {
+    short rel_dir_rc[8][2] = {
         {1, 0}, {0, 1}, {-1, 0}, {0, -1}, {1, 1}, {-1, 1}, {-1, -1}, {1, -1}
     };
-    for (auto &d : rel_dir) {
+    for (auto &d : rel_dir_rc) {
         if (this->InBounds(r+d[1], c+d[0])) {
             (*empty).adj[i] = &(this->board[r+d[1]][c+d[0]]);
             i++;
@@ -145,7 +147,9 @@ void Mineboard::Expand(short r, short c) {
     struct adj<coord_t> adj;
     this->FetchNeighboursLoc(r, c, &adj);
     for (short i=0; ((i<8) & (adj.adj[i]!=nullptr)) ; i++) {
-        this->Expand(adj.adj[i]->r, adj.adj[i]->c);
+        if (this->board[adj.adj[i]->r][adj.adj[i]->c].state == CLOSED) {
+            this->Expand(adj.adj[i]->r, adj.adj[i]->c);
+        }
     }
     this->FreeNeighboursLoc(&adj);
 }
